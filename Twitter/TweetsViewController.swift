@@ -13,6 +13,9 @@ import AFNetworking
 class TweetsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, TweetCellDelegate {
     
     var tweets: [Tweet] = []
+    var maxId: String?
+    var isLoadingData = false
+    var isAtBottom = false
     
     @IBOutlet weak var tabelView: UITableView!
 
@@ -25,13 +28,7 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
         tabelView.rowHeight = UITableViewAutomaticDimension
         tabelView.estimatedRowHeight = 120
         
-        
-        TwitterClient.sharedInstance.homeTimelineWithCompletionParams(nil, completion: { (tweets, error) -> () in
-            if let tweets = tweets {
-                self.tweets = tweets
-                self.tabelView.reloadData()
-            }
-        })
+        loadNextPage()
 
     }
 
@@ -102,6 +99,46 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
                 }
             })
         }
+    }
+    
+    func loadNextPage() {
+        
+        var params: NSDictionary? = nil
+        if let id = maxId {
+            params = ["max_id": id]
+        }
+        
+        if isLoadingData {
+            return
+        }
+        isLoadingData = true
+        TwitterClient.sharedInstance.homeTimelineWithCompletionParams(params, completion: { (tweets, error) -> () in
+            self.isLoadingData = false
+            if let tweets = tweets {
+                self.tweets += tweets
+                if let tweet = tweets.first {
+                    self.maxId = tweet.id
+                }
+                self.tabelView.reloadData()
+            }
+        })
+    }
+    
+    
+    func scrollViewDidScroll(scrollView: UIScrollView) {
+        if scrollView.contentSize.height >= scrollView.frame.height {
+            if scrollView.contentOffset.y + scrollView.frame.height > scrollView.contentSize.height {
+                if !isAtBottom {
+                    isAtBottom = true
+                    loadNextPage()
+                }
+            } else {
+                isAtBottom  = false
+            }
+
+        }
+        
+        
     }
     /*
     // MARK: - Navigation
