@@ -7,16 +7,27 @@
 //
 
 import UIKit
+import AFNetworking
 
-class TweetsViewController: UIViewController {
+
+class TweetsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     var tweets: [Tweet]?
+    
+    @IBOutlet weak var tabelView: UITableView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tabelView.delegate = self
+        tabelView.dataSource = self
+        tabelView.rowHeight = UITableViewAutomaticDimension
+        tabelView.estimatedRowHeight = 120
+        
+        
         TwitterClient.sharedInstance.homeTimelineWithCompletionParams(nil, completion: { (tweets, error) -> () in
             self.tweets = tweets
+            self.tabelView.reloadData()
         })
 
     }
@@ -32,6 +43,26 @@ class TweetsViewController: UIViewController {
         
     }
 
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        let cell = tabelView.dequeueReusableCellWithIdentifier("TweetCell", forIndexPath: indexPath) as! TweetCell
+        let url = NSURL(string: tweets![indexPath.row].user.profileImageUrl!);
+        
+        cell.profilePicture.setImageWithURL(url!)
+        cell.userName.text = tweets![indexPath.row].user.name
+        cell.tweetText.text = tweets![indexPath.row].text
+        cell.timeStamp.text = tweets![indexPath.row].displayCreateAt
+        
+        return cell
+    }
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if let tweets = self.tweets {
+            return tweets.count
+            
+        }
+        return 0
+    }
     /*
     // MARK: - Navigation
 

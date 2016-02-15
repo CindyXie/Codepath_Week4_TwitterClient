@@ -26,12 +26,8 @@ class TwitterClient: BDBOAuth1SessionManager {
     
     func homeTimelineWithCompletionParams(params: NSDictionary?, completion: (tweets: [Tweet]?, error: NSError?) ->()) {
         GET("1.1/statuses/home_timeline.json", parameters: params, success: { (operation: NSURLSessionDataTask, response: AnyObject?) -> Void in
-            //print("home timeline: \(response)")
             let tweets = Tweet.tweetsWithArray(response as! [NSDictionary])
             completion(tweets: tweets, error: nil)
-            for tweet in tweets {
-                print("text: \(tweet.text), created : \(tweet.createAt)")
-            }
             
         }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
             print("error getting home timeline")
@@ -65,10 +61,8 @@ class TwitterClient: BDBOAuth1SessionManager {
             TwitterClient.sharedInstance.requestSerializer.saveAccessToken(accessToken)
             
                 TwitterClient.sharedInstance.GET("1.1/account/verify_credentials.json", parameters: nil, success: { (operation: NSURLSessionDataTask, response: AnyObject?) -> Void in
-                //print("user: \(response)")
                     let user = User(dictionary: response as! NSDictionary)
                     User.currentUser = user
-                    print("user: \(user.name)")
                     self.loginCompletion?(user: user, error:nil)
                     
                 }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
