@@ -16,6 +16,7 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
     var maxId: String?
     var isLoadingData = false
     var isAtBottom = false
+    var user: User!
     
     @IBOutlet weak var tabelView: UITableView!
 
@@ -40,7 +41,9 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
     
     @IBAction func onLogout(sender: AnyObject) {
         User.currentUser?.logout()
-
+    }
+    
+    @IBAction func unwindToMainMenu(sender: UIStoryboardSegue) {
         
     }
 
@@ -169,6 +172,11 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
             let profileViewController = segue.destinationViewController as! ProfileViewController
             profileViewController.tweet = tweet
         }
+        
+        if segue.identifier == "toNewTweetPage" {
+            
+        }
+
 
         
     }
