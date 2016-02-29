@@ -10,7 +10,7 @@ import UIKit
 import AFNetworking
 
 
-class TweetsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, TweetCellDelegate {
+class TweetsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, TweetCellDelegate, DetailPageViewControllerDelegate {
     
     var tweets: [Tweet] = []
     var maxId: String?
@@ -27,6 +27,7 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
         tabelView.dataSource = self
         tabelView.rowHeight = UITableViewAutomaticDimension
         tabelView.estimatedRowHeight = 120
+        tabelView.registerNib(UINib(nibName: "TweetCell", bundle: nil), forCellReuseIdentifier: "TweetCell")
         
         loadNextPage()
 
@@ -46,16 +47,8 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
         let cell = tabelView.dequeueReusableCellWithIdentifier("TweetCell", forIndexPath: indexPath) as! TweetCell
-        let url = NSURL(string: tweets[indexPath.row].user.profileImageUrl!);
-        
-        cell.profilePicture.setImageWithURL(url!)
-        cell.userName.text = tweets[indexPath.row].user.name
-        cell.tweetText.text = tweets[indexPath.row].text
-        cell.timeStamp.text = tweets[indexPath.row].displayCreateAt
-        cell.retweetCount.text = String(tweets[indexPath.row].retweetCount)
-        cell.retweet.selected = tweets[indexPath.row].retweeted
-        cell.favorite.selected = tweets[indexPath.row].favorited
-        cell.favoriteCount.text = String(tweets[indexPath.row].favoritesCount)
+        let tweet = tweets[indexPath.row]
+        cell.configure(tweet)
         cell.delegate = self
         
         return cell
@@ -63,6 +56,10 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return tweets.count
+    }
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        performSegueWithIdentifier("toDetailPage", sender: indexPath)
     }
     
     func tweetCellRetweet(tweetcell: TweetCell) {
@@ -101,6 +98,21 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
         }
     }
     
+    func tweetCellDidTapProfileImage(tweetCell: TweetCell) {
+        performSegueWithIdentifier("toProfilePage", sender: tweetCell)
+    }
+
+    func detailPageViewController(viewController: DetailPageViewController, tweetDidUpdate tweet: Tweet) {
+        let id = tweet.id
+        if let index = tweets.indexOf({ (tweet) -> Bool in
+            id == tweet.id
+        }) {
+            self.tweets[index] = tweet
+            self.tabelView.reloadData()
+        }
+        
+    }
+    
     func loadNextPage() {
         
         var params: NSDictionary? = nil
@@ -137,17 +149,28 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
             }
 
         }
-        
-        
     }
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        if segue.identifier == "toDetailPage" {
+            let destinationVC = segue.destinationViewController as! DetailPageViewController
+            destinationVC.delegate = self
+            let indexPath = sender as! NSIndexPath
+            let tweet = tweets[indexPath.row]
+            destinationVC.tweet = tweet
+            
+        }
+        
+        if segue.identifier == "toProfilePage" {
+            let cell = sender as! TweetCell
+            let indexPath = self.tabelView.indexPathForCell(cell)
+            let tweet = tweets[indexPath!.row]
+            
+            let profileViewController = segue.destinationViewController as! ProfileViewController
+            profileViewController.tweet = tweet
+        }
+
+        
     }
-    */
 
 }
